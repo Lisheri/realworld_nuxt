@@ -35,5 +35,7 @@ export const useUserStore = defineStore('user', {
   },
   getters: {
     getUserInfo: (state) => state.user,
-  }
+    getToken: (state): string => state?.user?.token || '',
+    isLogin: (state) => !!state?.user?.token
+  },
 });

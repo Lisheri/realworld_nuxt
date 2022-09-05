@@ -1,115 +1,77 @@
 <script lang="tsx">
-import { defineComponent } from 'vue';
+import { defineComponent, reactive } from 'vue';
+import HomeHeader from './components/HomeHeader';
+import { useState } from '@/hooks';
+import { getArticleList, getTags } from '@/apis/articles';
+import ArticleItem from './components/ArticleItem';
+import Pagination from './components/Pagination';
+import Banner from './components/Banner';
+import Tags from './components/Tags';
+const getPages = (count: number, limit: number) => ((count / limit) >>> 0) + 1;
 
 export default defineComponent({
   name: 'HomeIndex',
-  setup() {
+  async setup() {
+    const limit = 20;
+    const [current, setCurrent] = useState(2);
+    const onTabChange = (val: 1 | 2) => {
+      setCurrent(val);
+    };
+    const [curPage] = useState(1);
+    const [curTag] = useState('');
+    const getTag = (tag: string) => {
+      if (tag) {
+        if (tag === 'all') return undefined;
+        return tag;
+      } else {
+        return undefined;
+      }
+    };
+    const params = computed(() => ({
+      tag: getTag(curTag.value),
+      limit,
+      offset: (curPage.value - 1) * limit
+    }));
+    const getList = (params) => {
+      getArticleList(params).then((res: any) => {
+        setArticles(res?.articles || []);
+        setPagesNum(getPages(res?.articlesCount, limit));
+      });
+    };
+    watch(
+      () => params.value,
+      (newVal) => {
+        console.info(newVal);
+        getList(newVal);
+      }
+    );
+    const [articles, setArticles] = useState([]);
+    const [pagesNum, setPagesNum] = useState(0);
+    const [tags, setTags] = useState([]);
+    const initData = () => {
+      return Promise.all([getArticleList(params.value), getTags()]);
+    };
+    const { data } = await useAsyncData('home', () => initData());
+    setArticles((data?.value as any)?.[0]?.articles || []);
+    setTags((data?.value as any)?.[1]?.tags || []);
+    setPagesNum(getPages((data?.value as any)?.articlesCount, limit));
+
     return () => (
       <div class="home-page">
-        <div class="banner">
-          <div class="container">
-            <h1 class="logo-font">conduit</h1>
-            <p>A place to share your knowledge.</p>
-          </div>
-        </div>
+        <Banner />
         <div class="container page">
           <div class="row">
             <div class="col-md-9">
-              <div class="feed-toggle">
-                <ul class="nav nav-pills outline-active">
-                  <li class="nav-item">
-                    <a class="nav-link disabled" href="">
-                      Your Feed
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link active" href="">
-                      Global Feed
-                    </a>
-                  </li>
-                </ul>
-              </div>
-
-              <div class="article-preview">
-                <div class="article-meta">
-                  <a href="profile.html">
-                    <img src="http://i.imgur.com/Qr71crq.jpg" />
-                  </a>
-                  <div class="info">
-                    <a href="" class="author">
-                      Eric Simons
-                    </a>
-                    <span class="date">January 20th</span>
-                  </div>
-                  <button class="btn btn-outline-primary btn-sm pull-xs-right">
-                    <i class="ion-heart"></i> 29
-                  </button>
-                </div>
-                <a href="" class="preview-link">
-                  <h1>How to build webapps that scale</h1>
-                  <p>This is the description for the post.</p>
-                  <span>Read more...</span>
-                </a>
-              </div>
-
-              <div class="article-preview">
-                <div class="article-meta">
-                  <a href="profile.html">
-                    <img src="http://i.imgur.com/N4VcUeJ.jpg" />
-                  </a>
-                  <div class="info">
-                    <a href="" class="author">
-                      Albert Pai
-                    </a>
-                    <span class="date">January 20th</span>
-                  </div>
-                  <button class="btn btn-outline-primary btn-sm pull-xs-right">
-                    <i class="ion-heart"></i> 32
-                  </button>
-                </div>
-                <a href="" class="preview-link">
-                  <h1>
-                    The song you won't ever stop singing. No matter how hard you
-                    try.
-                  </h1>
-                  <p>This is the description for the post.</p>
-                  <span>Read more...</span>
-                </a>
-              </div>
+              <HomeHeader value={current.value} onChange={onTabChange} />
+              {articles.value.map((item) => (
+                <ArticleItem {...item} key={item.slug} />
+              ))}
+              <Pagination
+                v-model={[curPage.value, 'value']}
+                pages={pagesNum.value}
+              />
             </div>
-
-            <div class="col-md-3">
-              <div class="sidebar">
-                <p>Popular Tags</p>
-
-                <div class="tag-list">
-                  <a href="" class="tag-pill tag-default">
-                    programming
-                  </a>
-                  <a href="" class="tag-pill tag-default">
-                    javascript
-                  </a>
-                  <a href="" class="tag-pill tag-default">
-                    emberjs
-                  </a>
-                  <a href="" class="tag-pill tag-default">
-                    angularjs
-                  </a>
-                  <a href="" class="tag-pill tag-default">
-                    react
-                  </a>
-                  <a href="" class="tag-pill tag-default">
-                    mean
-                  </a>
-                  <a href="" class="tag-pill tag-default">
-                    node
-                  </a>
-                  <a href="" class="tag-pill tag-default">
-                    rails
-                  </a>
-                </div>
-              </div>
-            </div>
+            <Tags tags={tags.value} v-model={[curTag.value, 'value']} />
           </div>
         </div>
       </div>

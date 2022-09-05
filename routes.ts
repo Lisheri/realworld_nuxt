@@ -26,7 +26,7 @@ export default [
       },
       {
         name: 'profile',
-        path: '/profile/:username',
+        path: '/profile',
         file: resolve('pages/profile/index.vue'),
       },
       {
@@ -40,7 +40,7 @@ export default [
         file: resolve('pages/editor/index.vue'),
       },
       {
-        name: 'article/:slug',
+        name: 'article',
         path: '/article',
         file: resolve('pages/article/index.vue'),
       }

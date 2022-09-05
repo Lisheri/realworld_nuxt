@@ -1,6 +1,7 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
-import { SUCCESS_CODE } from '@/constants';
+import { SUCCESS_CODE, X_ACCESS_TOKEN } from '@/constants';
 import { handleResponseErr } from './tools';
+import { useUserStore } from '@/store';
 
 const BASE_URL = 'https://api.realworld.io/api';
 
@@ -12,6 +13,11 @@ const service = axios.create({
 // 请求拦截
 service.interceptors.request.use(
   (config: AxiosRequestConfig) => {
+    const store = useUserStore();
+    const token = store.getToken;
+    if (token) {
+      config.headers[X_ACCESS_TOKEN] = token; // 让每个请求携带自定义 token 请根据实际情况自行修改
+    }
     return config;
   },
   (error) => {

@@ -29,7 +29,7 @@ export default defineComponent({
         .then((res: any) => {
           console.info(res)
           store.setUser(res.user)
-          // router.push({ path: '/' });
+          router.push({ path: '/' });
         })
         .catch((err) => {
           console.info('请求失败', err);
