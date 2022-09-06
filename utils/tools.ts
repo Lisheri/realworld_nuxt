@@ -37,3 +37,7 @@ export const getDay = (time: string) => {
   if (curDay === 3) return '3rd';
   return `${curDay}th`;
 }
+
+export const getYear = (time: string) => {
+  return  new Date(time).getFullYear();
+}

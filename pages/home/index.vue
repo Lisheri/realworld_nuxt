@@ -2,38 +2,47 @@
 import { defineComponent, reactive } from 'vue';
 import HomeHeader from './components/HomeHeader';
 import { useState } from '@/hooks';
-import { getArticleList, getTags } from '@/apis/articles';
+import { getArticleList, getTags, getArticleFeed } from '@/apis/articles';
 import ArticleItem from './components/ArticleItem';
 import Pagination from './components/Pagination';
 import Banner from './components/Banner';
 import Tags from './components/Tags';
+import { useUserStore } from '@/store';
 const getPages = (count: number, limit: number) => ((count / limit) >>> 0) + 1;
 
 export default defineComponent({
   name: 'HomeIndex',
   async setup() {
     const limit = 20;
-    const [current, setCurrent] = useState(2);
-    const onTabChange = (val: 1 | 2) => {
-      setCurrent(val);
-    };
-    const [curPage] = useState(1);
-    const [curTag] = useState('');
-    const getTag = (tag: string) => {
-      if (tag) {
-        if (tag === 'all') return undefined;
-        return tag;
+    const [current, setCurrent] = useState('Global Feed');
+    const [isFeed, setIsFeed] = useState(false);
+    const store = useUserStore();
+    const onTabChange = (val: string) => {
+      if (val === 'Your Feed') {
+        setIsFeed(true);
       } else {
-        return undefined;
+        setIsFeed(false);
       }
+      setCurrent(val);
+      setCurPage(1);
     };
+    const [curPage, setCurPage] = useState(1);
+    const [curTag, setCurTag] = useState('');
     const params = computed(() => ({
-      tag: getTag(curTag.value),
+      tag: curTag.value === current.value ? curTag.value : undefined,
       limit,
-      offset: (curPage.value - 1) * limit
+      offset: (curPage.value - 1) * limit,
     }));
+    const feedParams = computed(() => {
+      return {
+
+      }
+      // author: isAuthor.value ? store.getUserInfo.username : undefined
+    })
     const getList = (params) => {
-      getArticleList(params).then((res: any) => {
+      const { limit, offset } = params;
+      const getList = isFeed.value ? getArticleFeed({limit, offset}) : getArticleList(params)
+      getList.then((res: any) => {
         setArticles(res?.articles || []);
         setPagesNum(getPages(res?.articlesCount, limit));
       });
@@ -41,7 +50,6 @@ export default defineComponent({
     watch(
       () => params.value,
       (newVal) => {
-        console.info(newVal);
         getList(newVal);
       }
     );
@@ -56,22 +64,42 @@ export default defineComponent({
     setTags((data?.value as any)?.[1]?.tags || []);
     setPagesNum(getPages((data?.value as any)?.articlesCount, limit));
 
+    const handleTagChange = (tag) => {
+      onTabChange(tag)
+    };
+    const onFavorivedChange = (slug: string, favorite: boolean) => {
+      setArticles(articles.value.map(item => {
+        if (item.slug === slug) {
+          return {...item, favorited: favorite }
+        }
+        return item;
+      }))
+    }
+
     return () => (
       <div class="home-page">
         <Banner />
         <div class="container page">
           <div class="row">
             <div class="col-md-9">
-              <HomeHeader value={current.value} onChange={onTabChange} />
-              {articles.value.map((item) => (
-                <ArticleItem {...item} key={item.slug} />
-              ))}
+              <HomeHeader
+                value={current.value}
+                curTag={curTag.value}
+                onChange={onTabChange}
+              />
+              {articles.value.length ? articles.value.map((item) => (
+                <ArticleItem {...item} key={item.slug} onFavorivedChange={onFavorivedChange}/>
+              )) : <div class="empty">暂无数据</div>}
               <Pagination
                 v-model={[curPage.value, 'value']}
                 pages={pagesNum.value}
               />
             </div>
-            <Tags tags={tags.value} v-model={[curTag.value, 'value']} />
+            <Tags
+              tags={tags.value}
+              v-model={[curTag.value, 'value']}
+              onChange={handleTagChange}
+            />
           </div>
         </div>
       </div>
@@ -79,4 +107,13 @@ export default defineComponent({
   }
 });
 </script>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+  .empty {
+    height: 200px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #999;
+  }
+</style>

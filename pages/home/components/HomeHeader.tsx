@@ -1,23 +1,15 @@
 import type { PropType } from 'vue';
-import { defineComponent } from 'vue';
+import { defineComponent, computed } from 'vue';
 import { useUserStore } from '@/store';
 import '../header.scss';
-const config = [
-  {
-    text: 'Your Feed',
-    activeKey: 1
-  },
-  {
-    text: 'Global Feed',
-    activeKey: 2
-  }
-];
+const config = ['Global Feed'];
 // import { useState } from '@/hooks';
 
 export default defineComponent({
   name: 'HomeHeader',
   props: {
-    value: { type: Number, default: 0 },
+    value: { type: String, default: '' },
+    curTag: { type: String, default: '' },
     onChange: { type: Function as PropType<(val: number | string) => void> }
   },
   emits: ['update:value'],
@@ -28,21 +20,25 @@ export default defineComponent({
       emit('update:value', val);
       props.onChange(val);
     };
+    const allConfig = computed(() => {
+      const realConfig = isLogin.value ? ['Your Feed', ...config] : config;
+      return props.curTag ? realConfig.concat(props.curTag) : realConfig
+    });
     return () => {
-      const { value } = props;
+      const { value, curTag } = props;
       return (
         <div class="feed-toggle">
           <ul class="nav nav-pills outline-active">
-            {config.map((item) => (
+            {allConfig.value.map((item) => (
               <li class="nav-item">
                 <span
-                  key={item.activeKey}
+                  key={item}
                   class={`nav-link ${
-                    !isLogin.value && item.activeKey === 1 ? 'disabled' : ''
-                  } ${value === item.activeKey ? 'active' : ''}`}
-                  onClick={onChange.bind(null, item.activeKey)}
+                    !isLogin.value && item === 'Your Feed' ? 'disabled' : ''
+                  } ${value === item ? 'active' : ''}`}
+                  onClick={onChange.bind(null, item)}
                 >
-                  {item.text}
+                  {props.curTag !== item ? item : `#${item}`}
                 </span>
               </li>
             ))}
