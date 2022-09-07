@@ -1,143 +1,95 @@
 <script lang="tsx">
-import { defineComponent } from 'vue';
+import { defineComponent, computed, onMounted } from 'vue';
+import Banner from './components/Banner';
+import ArticleContent from './components/ArticleContent';
+import Author from './components/Author';
+import ArticleCommit from './components/ArticleCommit';
+import CommitItem from './components/CommitItem';
+import { useRoute } from 'vue-router';
+import { getArticleInfo } from '@/apis/articles';
+import { useState } from '@/hooks';
+import { getMonthAsEng, getDay } from '@/utils/tools';
 
+const getTime = (time: string) => `${getMonthAsEng(time)}${getDay(time)}`;
 export default defineComponent({
   name: 'ArticleIndex',
-  setup() {
+  async setup() {
+    const route = useRoute();
+    const slug = computed(() => (route.query.slug as string) || '');
+    const initData = () => {
+      useHead({
+        title: `realWorld`,
+        meta: [
+          { hid: 'description', name: 'description', content: 'My custom description' }
+        ]
+      })
+      return Promise.all([getArticleInfo(slug.value)]);
+    };
+    onMounted(() => {
+      console.info('fuck')
+      if (process.client) {
+        initData().then((res: any) => {
+          setArticle(res[0].article)
+        })
+      }
+    })
+
+    const { data } = await useAsyncData('home', () => initData());
+
+    const [article, setArticle] = useState(
+      (data.value?.[0] as any)?.article || {}
+    );
+
+    const [disableFavorite, setDisableFavorite] = useState(false);
+
+    const title = computed(() => article.value.title);
+
+    const author = computed(() => article.value.author);
+
+    const updateTime = computed(() => getTime(article.value.updatedAt));
+
+    const articleBody = computed(() => article.value.body);
+
+    const favorited = computed(() => article.value.favorited);
+
+    const favoritesCount = computed(() => article.value.favoritesCount);
+
+    const onFavorivedChange = (_slug: string, favorite: boolean) => {
+      setArticle({ ...article.value, favorited: favorite });
+    };
+    console.info(article.value);
     return () => (
       <div class="article-page">
-        <div class="banner">
-          <div class="container">
-            <h1>How to build webapps that scale</h1>
-
-            <div class="article-meta">
-              <a href="">
-                <img src="http://i.imgur.com/Qr71crq.jpg" />
-              </a>
-              <div class="info">
-                <a href="" class="author">
-                  Eric Simons
-                </a>
-                <span class="date">January 20th</span>
-              </div>
-              <button class="btn btn-sm btn-outline-secondary">
-                <i class="ion-plus-round"></i>
-                &nbsp; Follow Eric Simons <span class="counter">(10)</span>
-              </button>
-              &nbsp;&nbsp;
-              <button class="btn btn-sm btn-outline-primary">
-                <i class="ion-heart"></i>
-                &nbsp; Favorite Post <span class="counter">(29)</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
+        <Banner
+          title={title.value}
+          author={author.value}
+          updateTime={updateTime.value}
+          favorited={favorited.value}
+          favoritesCount={favoritesCount.value}
+          slug={route.query.slug as string}
+          disableFavorite={disableFavorite.value}
+          onFavorivedChange={onFavorivedChange}
+        />
         <div class="container page">
-          <div class="row article-content">
-            <div class="col-md-12">
-              <p>
-                Web development technologies have evolved at an incredible clip
-                over the past few years.
-              </p>
-              <h2 id="introducing-ionic">Introducing RealWorld.</h2>
-              <p>
-                It's a great solution for learning how other frameworks work.
-              </p>
-            </div>
-          </div>
-
+          <ArticleContent content={articleBody.value} />
           <hr />
-
           <div class="article-actions">
-            <div class="article-meta">
-              <a href="profile.html">
-                <img src="http://i.imgur.com/Qr71crq.jpg" />
-              </a>
-              <div class="info">
-                <a href="" class="author">
-                  Eric Simons
-                </a>
-                <span class="date">January 20th</span>
-              </div>
-              <button class="btn btn-sm btn-outline-secondary">
-                <i class="ion-plus-round"></i>
-                &nbsp; Follow Eric Simons
-              </button>
-              &nbsp;
-              <button class="btn btn-sm btn-outline-primary">
-                <i class="ion-heart"></i>
-                &nbsp; Favorite Post <span class="counter">(29)</span>
-              </button>
-            </div>
+            <Author
+              author={author.value}
+              updateTime={updateTime.value}
+              favorited={favorited.value}
+              favoritesCount={favoritesCount.value}
+              slug={route.query.slug as string}
+              disableFavorite={disableFavorite.value}
+              onFavorivedChange={onFavorivedChange}
+              setDisableFavorite={setDisableFavorite}
+            />
           </div>
-
           <div class="row">
             <div class="col-xs-12 col-md-8 offset-md-2">
-              <form class="card comment-form">
-                <div class="card-block">
-                  <textarea
-                    class="form-control"
-                    placeholder="Write a comment..."
-                    rows="3"
-                  ></textarea>
-                </div>
-                <div class="card-footer">
-                  <img
-                    src="http://i.imgur.com/Qr71crq.jpg"
-                    class="comment-author-img"
-                  />
-                  <button class="btn btn-sm btn-primary">Post Comment</button>
-                </div>
-              </form>
-
-              <div class="card">
-                <div class="card-block">
-                  <p class="card-text">
-                    With supporting text below as a natural lead-in to
-                    additional content.
-                  </p>
-                </div>
-                <div class="card-footer">
-                  <a href="" class="comment-author">
-                    <img
-                      src="http://i.imgur.com/Qr71crq.jpg"
-                      class="comment-author-img"
-                    />
-                  </a>
-                  &nbsp;
-                  <a href="" class="comment-author">
-                    Jacob Schmidt
-                  </a>
-                  <span class="date-posted">Dec 29th</span>
-                </div>
-              </div>
-
-              <div class="card">
-                <div class="card-block">
-                  <p class="card-text">
-                    With supporting text below as a natural lead-in to
-                    additional content.
-                  </p>
-                </div>
-                <div class="card-footer">
-                  <a href="" class="comment-author">
-                    <img
-                      src="http://i.imgur.com/Qr71crq.jpg"
-                      class="comment-author-img"
-                    />
-                  </a>
-                  &nbsp;
-                  <a href="" class="comment-author">
-                    Jacob Schmidt
-                  </a>
-                  <span class="date-posted">Dec 29th</span>
-                  <span class="mod-options">
-                    <i class="ion-edit"></i>
-                    <i class="ion-trash-a"></i>
-                  </span>
-                </div>
-              </div>
+              <ArticleCommit />
+              <CommitItem />
+              <CommitItem />
             </div>
           </div>
         </div>

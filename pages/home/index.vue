@@ -1,5 +1,5 @@
 <script lang="tsx">
-import { defineComponent, reactive } from 'vue';
+import { defineComponent, onMounted } from 'vue';
 import HomeHeader from './components/HomeHeader';
 import { useState } from '@/hooks';
 import { getArticleList, getTags, getArticleFeed } from '@/apis/articles';
@@ -59,6 +59,15 @@ export default defineComponent({
     const initData = () => {
       return Promise.all([getArticleList(params.value), getTags()]);
     };
+    onMounted(() => {
+      if (process.client) {
+        initData().then((res: any) => {
+          setArticles((res)?.[0]?.articles || []);
+          setTags((res)?.[1]?.tags || []);
+          setPagesNum(getPages((res)?.[0]?.articlesCount, limit));
+        })
+      }
+    })
     const { data } = await useAsyncData('home', () => initData());
     setArticles((data?.value as any)?.[0]?.articles || []);
     setTags((data?.value as any)?.[1]?.tags || []);

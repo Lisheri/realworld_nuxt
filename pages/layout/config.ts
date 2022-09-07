@@ -39,7 +39,7 @@ const loginConfig = (userInfo: userInfoType) => [
     icon: 'ion-gear-a'
   },
   {
-    path: `/profile/${userInfo.id || 1}`,
+    path: `/profile`,
     imgSrc: userInfo.img || 'https://avatars.githubusercontent.com/u/49238808?s=40&v=4',
     text: userInfo.username || '测试昵称'
   }

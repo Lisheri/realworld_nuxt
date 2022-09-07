@@ -6,3 +6,5 @@ export const getArticleList = (params) => getAction('/articles', params);
 export const getTags = () => getAction('/tags');
 
 export const getArticleFeed = (params) => getAction('/articles/feed', params)
+
+export const getArticleInfo = (slug: string) => getAction(`/articles/${slug}`);

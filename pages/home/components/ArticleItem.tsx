@@ -3,7 +3,7 @@ import { defineComponent } from 'vue';
 import { getDay, getMonthAsEng, getYear } from '@/utils/tools';
 import NuxtLink from '@/components/NuxtLink';
 import { addFavorite, removeFavorite } from '@/apis/favorite';
-import { useState } from '@/hooks';
+import { useState, useFavorite } from '@/hooks';
 
 interface IAuthor {
   bio?: number;
@@ -37,28 +37,7 @@ const ArticleItem = defineComponent({
     }
   },
   setup(props: IArticleItem) {
-    const [isFavoriteing, setIsFavoriteing] = useState(false);
-    const handleFavorite = () => {
-      if (isFavoriteing.value) {
-        return;
-      }
-      setIsFavoriteing(true);
-      const { favorited, slug, onFavorivedChange } = props;
-      if (!favorited) {
-        addFavorite(slug).then(() => {
-          console.info(slug);
-        }).finally(() => {
-          setIsFavoriteing(false)
-        });
-      } else {
-        removeFavorite(slug).then(() => {
-          console.info(slug);
-        }).finally(() => {
-          setIsFavoriteing(false)
-        });
-      }
-      onFavorivedChange(slug, !favorited);
-    };
+    const { handleFavorite, isFavoriteing } = useFavorite(props);
     return () => {
       const {
         author,
