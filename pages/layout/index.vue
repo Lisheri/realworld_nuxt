@@ -34,4 +34,6 @@ export default defineComponent({
   }
 });
 </script>
-<style lang="scss" scoped></style>
+<style lang="scss">
+@import '@/assets/global/main.css'
+</style>

@@ -1,5 +1,8 @@
 import { useUserStore } from '@/store';
-// import parser from 'cookie-parser';
+
+// 防止缺少require
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 const parser = require('cookieparser');
 const cookieparser = parser;
 const initServer = async ({ ssrContext: { req } }) => {
