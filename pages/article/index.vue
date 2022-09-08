@@ -4,7 +4,6 @@ import Banner from './components/Banner';
 import ArticleContent from './components/ArticleContent';
 import Author from './components/Author';
 import ArticleCommit from './components/ArticleCommit';
-import CommitItem from './components/CommitItem';
 import { useRoute } from 'vue-router';
 import { getArticleInfo } from '@/apis/articles';
 import { useState } from '@/hooks';
@@ -26,7 +25,6 @@ export default defineComponent({
       return Promise.all([getArticleInfo(slug.value)]);
     };
     onMounted(() => {
-      console.info('fuck')
       if (process.client) {
         initData().then((res: any) => {
           setArticle(res[0].article)
@@ -87,9 +85,7 @@ export default defineComponent({
           </div>
           <div class="row">
             <div class="col-xs-12 col-md-8 offset-md-2">
-              <ArticleCommit />
-              <CommitItem />
-              <CommitItem />
+              <ArticleCommit slug={slug.value} author={author.value}/>
             </div>
           </div>
         </div>
